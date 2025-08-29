@@ -1,0 +1,3 @@
+@echo off
+echo Connecting to RDS PostgreSQL...
+"C:\Program Files\PostgreSQL\16\bin\psql.exe" "host=modular-instance-1.cwlwy42oiff1.us-east-1.rds.amazonaws.com port=5432 dbname=postgres user=postgres"
