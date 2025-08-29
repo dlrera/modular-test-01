@@ -1,0 +1,49 @@
+# CODEOWNERS file for modular-test-01
+# This file defines who is responsible for code in this repository.
+# These owners will be automatically requested for review when someone
+# opens a pull request that modifies code that they own.
+#
+# For more information, see:
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything in the repo
+* @yourusername
+
+# Backend (Django/Python)
+/backend/ @yourusername
+/backend/config/ @yourusername
+/backend/apps/ @yourusername
+/backend/tests/ @yourusername
+/backend/requirements.txt @yourusername
+/backend/pyproject.toml @yourusername
+
+# Frontend (Vue.js/TypeScript)
+/frontend/ @yourusername
+/frontend/src/ @yourusername
+/frontend/tests/ @yourusername
+/frontend/package.json @yourusername
+/frontend/tsconfig.json @yourusername
+
+# Documentation
+/docs/ @yourusername
+*.md @yourusername
+README.md @yourusername
+
+# DevOps / Infrastructure
+/docker-compose.yml @yourusername
+/Dockerfile* @yourusername
+/.github/ @yourusername
+/.github/workflows/ @yourusername
+/init-db.sql @yourusername
+
+# Configuration files
+/.editorconfig @yourusername
+/.gitignore @yourusername
+/.pre-commit-config.yaml @yourusername
+/LICENSE @yourusername
+
+# Security-sensitive files
+*.env @yourusername
+*.env.* @yourusername
+**/settings*.py @yourusername
+**/config*.py @yourusername
