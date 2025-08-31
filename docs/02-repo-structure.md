@@ -1,0 +1,63 @@
+# Repo structure
+
+backend/
+  config/
+    settings_base.py
+    settings_dev.py
+  core/
+    auth/
+    tenancy/
+    storage/
+    utils/
+  modules/
+    documents/
+      api/
+      services/
+      tasks/
+      public/
+      tests/
+      models.py
+      urls.py
+    pm_templates/
+      api/
+      services/
+      tasks/
+      public/
+      tests/
+      models.py
+      urls.py
+    risk_inspections/
+      api/
+      services/
+      tasks/
+      public/
+      tests/
+      models.py
+      urls.py
+frontend/
+  src/
+    app/
+      router/
+      layouts/
+      shared/
+        api/
+        ui/
+    features/
+      documents/
+      pm_templates/
+      risk_inspections/
+  vite.config.ts
+  tsconfig.json
+  package.json
+api/
+  contracts/
+    v1/
+      documents.yaml
+      pm_templates.yaml
+      risk_inspections.yaml
+.docs/
+  ... (this folder)
+.github/
+  workflows/
+    ci.yml
+CODEOWNERS
