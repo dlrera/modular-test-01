@@ -32,9 +32,14 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'storages',
     
-    # Local apps
+    # Core apps
     'core',
     'accounts',
+    
+    # Feature modules
+    'modules.documents',
+    'modules.pm_templates',
+    'modules.risk_inspections',
 ]
 
 MIDDLEWARE = [
@@ -46,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.tenancy.middleware.TenantMiddleware',  # Add tenant context
 ]
 
 ROOT_URLCONF = 'config.urls'
