@@ -43,4 +43,4 @@ black==24.10.0
 isort==5.13.2
 ruff==0.8.1
 pre-commit==4.0.1
-djlint==1.36.1
+djlint==1.36.1import-linter==2.0

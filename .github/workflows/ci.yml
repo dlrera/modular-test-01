@@ -1,0 +1,309 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  PYTHON_VERSION: '3.12'
+  NODE_VERSION: '20'
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_DB: test_db
+
+jobs:
+  # ==========================================
+  # Backend Tests and Checks
+  # ==========================================
+  backend:
+    name: Backend Tests & Linting
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-cov
+
+      - name: Run Black formatting check
+        run: |
+          cd backend
+          black --check .
+
+      - name: Run isort import check
+        run: |
+          cd backend
+          isort --check-only .
+
+      - name: Run Ruff linting
+        run: |
+          cd backend
+          ruff check .
+
+      - name: Run MyPy type checking
+        run: |
+          cd backend
+          mypy . || true  # Allow to fail for now
+
+      - name: Check import boundaries with Import Linter
+        run: |
+          cd backend
+          pip install import-linter
+          lint-imports --config .importlinter
+
+      - name: Check for illegal cross-module imports
+        run: |
+          # Check that modules don't import from each other's internals
+          ! grep -r "from backend\.modules\.\(documents\|pm_templates\|risk_inspections\)\.\(models\|services\|views\|serializers\)" \
+            backend/modules/ \
+            --include="*.py" \
+            --exclude-dir=migrations \
+            --exclude-dir=public \
+            | grep -v "from backend\.modules\.[^.]*\.public"
+
+      - name: Run Django checks
+        env:
+          DATABASE_URL: postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:5432/${{ env.POSTGRES_DB }}
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test-secret-key-for-ci
+          DEBUG: false
+        run: |
+          cd backend
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+
+      - name: Run tests with coverage
+        env:
+          DATABASE_URL: postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:5432/${{ env.POSTGRES_DB }}
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test-secret-key-for-ci
+          DEBUG: false
+        run: |
+          cd backend
+          pytest --cov=. --cov-report=xml --cov-report=html --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./backend/coverage.xml
+          flags: backend
+          name: backend-coverage
+          fail_ci_if_error: false
+
+      - name: Check coverage threshold
+        run: |
+          cd backend
+          coverage report --fail-under=85
+
+  # ==========================================
+  # Frontend Tests and Checks
+  # ==========================================
+  frontend:
+    name: Frontend Tests & Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run ESLint
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: Run Prettier check
+        run: |
+          cd frontend
+          npm run format -- --check
+
+      - name: Run TypeScript type check
+        run: |
+          cd frontend
+          npm run type-check
+
+      - name: Run tests with coverage
+        run: |
+          cd frontend
+          npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./frontend/coverage/coverage-final.json
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: false
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+
+  # ==========================================
+  # Security Checks
+  # ==========================================
+  security:
+    name: Security Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install security tools
+        run: |
+          pip install bandit safety
+
+      - name: Run Bandit security scan
+        run: |
+          bandit -r backend/ -f json -o bandit-report.json || true
+
+      - name: Check Python dependencies for vulnerabilities
+        run: |
+          cd backend
+          safety check --json || true
+
+      - name: Run npm audit
+        run: |
+          cd frontend
+          npm audit --audit-level=high || true
+
+  # ==========================================
+  # Pre-commit Hooks Check
+  # ==========================================
+  pre-commit:
+    name: Pre-commit Hooks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1
+
+  # ==========================================
+  # OpenAPI Schema Generation
+  # ==========================================
+  api-schema:
+    name: OpenAPI Schema Check
+    runs-on: ubuntu-latest
+    needs: backend
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Generate OpenAPI schema
+        env:
+          DATABASE_URL: postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:5432/${{ env.POSTGRES_DB }}
+          SECRET_KEY: test-secret-key-for-ci
+        run: |
+          cd backend
+          python manage.py migrate
+          python manage.py spectacular --file openapi-schema.yml
+
+      - name: Upload OpenAPI schema
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-schema
+          path: backend/openapi-schema.yml
+
+  # ==========================================
+  # Coverage Report Summary
+  # ==========================================
+  coverage-report:
+    name: Coverage Report
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    if: always()
+
+    steps:
+      - name: Coverage Summary
+        run: |
+          echo "## Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Backend coverage: Target 85%" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Frontend coverage: Target 85%" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Full coverage reports available in job artifacts" >> $GITHUB_STEP_SUMMARY

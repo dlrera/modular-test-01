@@ -6,44 +6,102 @@
 # For more information, see:
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
+# ==========================================
 # Default owner for everything in the repo
-* @yourusername
+# ==========================================
+* @dlrera
 
-# Backend (Django/Python)
-/backend/ @yourusername
-/backend/config/ @yourusername
-/backend/apps/ @yourusername
-/backend/tests/ @yourusername
-/backend/requirements.txt @yourusername
-/backend/pyproject.toml @yourusername
+# ==========================================
+# Core Infrastructure & Configuration
+# ==========================================
 
-# Frontend (Vue.js/TypeScript)
-/frontend/ @yourusername
-/frontend/src/ @yourusername
-/frontend/tests/ @yourusername
-/frontend/package.json @yourusername
-/frontend/tsconfig.json @yourusername
+# Django Core & Settings
+/backend/config/ @dlrera
+/backend/core/ @dlrera
+/backend/core/tenancy/ @dlrera
+/backend/core/auth/ @dlrera
 
+# Accounts & Authentication
+/backend/accounts/ @dlrera
+
+# ==========================================
+# Feature Modules (path-scoped by module)
+# ==========================================
+
+# Documents Module
+/backend/modules/documents/ @dlrera
+/frontend/src/features/documents/ @dlrera
+/docs/claude/module-documents-context.md @dlrera
+
+# PM Templates Module
+/backend/modules/pm_templates/ @dlrera
+/frontend/src/features/pm-templates/ @dlrera
+/docs/claude/module-pm-templates-context.md @dlrera
+
+# Risk Inspections Module
+/backend/modules/risk_inspections/ @dlrera
+/frontend/src/features/risk-inspections/ @dlrera
+/docs/claude/module-risk-inspections-context.md @dlrera
+
+# ==========================================
+# Frontend Core
+# ==========================================
+/frontend/src/app/ @dlrera
+/frontend/src/shared/ @dlrera
+/frontend/src/plugins/ @dlrera
+/frontend/src/router/ @dlrera
+/frontend/package.json @dlrera
+/frontend/tsconfig.json @dlrera
+/frontend/vite.config.ts @dlrera
+
+# ==========================================
+# Testing
+# ==========================================
+/backend/**/tests/ @dlrera
+/frontend/**/tests/ @dlrera
+/backend/pytest.ini @dlrera
+/frontend/vitest.config.ts @dlrera
+
+# ==========================================
 # Documentation
-/docs/ @yourusername
-*.md @yourusername
-README.md @yourusername
+# ==========================================
+/docs/ @dlrera
+*.md @dlrera
+/README.md @dlrera
+/CLAUDE.md @dlrera
+/COMMIT_LOG.md @dlrera
 
+# ==========================================
 # DevOps / Infrastructure
-/docker-compose.yml @yourusername
-/Dockerfile* @yourusername
-/.github/ @yourusername
-/.github/workflows/ @yourusername
-/init-db.sql @yourusername
+# ==========================================
+/docker-compose.yml @dlrera
+/Dockerfile* @dlrera
+/.github/ @dlrera
+/.github/workflows/ @dlrera
+/init-db.sql @dlrera
 
-# Configuration files
-/.editorconfig @yourusername
-/.gitignore @yourusername
-/.pre-commit-config.yaml @yourusername
-/LICENSE @yourusername
+# ==========================================
+# Configuration & Build Files
+# ==========================================
+/.editorconfig @dlrera
+/.gitignore @dlrera
+/.pre-commit-config.yaml @dlrera
+/LICENSE @dlrera
+/backend/requirements*.txt @dlrera
+/backend/pyproject.toml @dlrera
 
-# Security-sensitive files
-*.env @yourusername
-*.env.* @yourusername
-**/settings*.py @yourusername
-**/config*.py @yourusername
+# ==========================================
+# Security-Sensitive Files (require extra review)
+# ==========================================
+*.env @dlrera
+*.env.* @dlrera
+**/settings*.py @dlrera
+**/config*.py @dlrera
+**/middleware.py @dlrera
+**/permissions.py @dlrera
+
+# ==========================================
+# Database & Migrations
+# ==========================================
+/backend/**/migrations/ @dlrera
+/backend/core/tenancy/models.py @dlrera
