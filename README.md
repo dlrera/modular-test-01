@@ -66,7 +66,22 @@ git clone https://github.com/yourusername/modular-test-01.git
 cd modular-test-01
 ```
 
-### 2. Start Docker Services
+### 2. Setup Git Hooks & Branch Protection
+```bash
+# Install pre-commit hooks
+pip install pre-commit
+pre-commit install
+
+# Setup custom branch protection hooks
+# Windows: setup-hooks.bat
+# Unix/Mac: ./setup-hooks.sh
+
+# Configure branch protection (in .env)
+# ALLOW_DIRECT_PUSH_TO_MAIN=true  # Allow direct pushes (development)
+# ALLOW_DIRECT_PUSH_TO_MAIN=false # Block direct pushes (production)
+```
+
+### 3. Start Docker Services
 ```bash
 docker-compose up -d
 ```
@@ -77,7 +92,7 @@ This starts:
 - MinIO (S3-compatible storage)
 - Mailpit (email testing)
 
-### 3. Backend Setup
+### 4. Backend Setup
 ```bash
 cd backend
 python -m venv venv
@@ -90,14 +105,14 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-### 4. Frontend Setup
+### 5. Frontend Setup
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### 5. Celery Worker (optional)
+### 6. Celery Worker (optional)
 ```bash
 cd backend
 celery -A config worker -l info

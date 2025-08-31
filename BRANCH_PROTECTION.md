@@ -4,6 +4,54 @@
 
 This document outlines the branch protection rules for the `main` branch to ensure code quality and prevent direct pushes.
 
+## 🔧 Configurable Protection (Environment Toggle)
+
+Branch protection can be toggled via environment variable for different environments:
+
+### Configuration
+
+Set in `.env` file:
+```bash
+# Allow direct pushes to main branch
+ALLOW_DIRECT_PUSH_TO_MAIN=true  # Development (default)
+ALLOW_DIRECT_PUSH_TO_MAIN=false # Production (recommended)
+```
+
+### Setup Custom Hooks
+
+```bash
+# Windows
+setup-hooks.bat
+
+# Unix/Mac/Linux
+./setup-hooks.sh
+
+# Or manually
+git config core.hooksPath .githooks
+```
+
+### Current Settings
+
+- **Development Mode** (`ALLOW_DIRECT_PUSH_TO_MAIN=true`):
+  - ⚠️ Direct pushes allowed with warning
+  - Pre-commit hooks still run for code quality
+  - Useful for solo development or prototyping
+
+- **Protected Mode** (`ALLOW_DIRECT_PUSH_TO_MAIN=false`):
+  - ❌ Direct pushes blocked
+  - Must use feature branches and PRs
+  - Recommended for teams and production
+
+### Override for Single Push
+
+```bash
+# Temporarily allow a direct push (not recommended)
+ALLOW_DIRECT_PUSH_TO_MAIN=true git push origin main
+
+# Windows PowerShell
+$env:ALLOW_DIRECT_PUSH_TO_MAIN='true'; git push origin main
+```
+
 ## GitHub Branch Protection Settings
 
 Navigate to: **Settings → Branches → Add rule**
