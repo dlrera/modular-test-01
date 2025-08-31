@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Modular PM{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <style>
+        :root {
+            /* Brand Colors from Look and Feel Guide */
+            --primary: #216093;
+            --secondary: #001B48;
+            --accent: #57949A;
+            --error: #DB162F;
+            --success: #2E933C;
+            --warning: #E18331;
+            --info: #224870;
+            --background: #F9FAFA;
+            --surface: #FFFFFF;
+            --on-background: #000000;
+            --on-surface: #000000;
+            --text-medium-emphasis: #666666;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--background);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--on-background);
+        }
+        
+        /* Navigation Bar */
+        .navbar {
+            background: var(--surface);
+            padding: 0.75rem 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            height: 64px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-content {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar-brand {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        /* Sidebar Navigation */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 64px;
+            bottom: 0;
+            width: 260px;
+            background: var(--secondary);
+            color: white;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 999;
+        }
+        
+        .sidebar-closed {
+            transform: translateX(-100%);
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem 1rem 0.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 0.5rem;
+        }
+        
+        .sidebar-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: rgba(255,255,255,0.6);
+            padding: 0.5rem 1rem;
+            margin-top: 1rem;
+        }
+        
+        .sidebar-nav {
+            padding: 0.5rem 0;
+        }
+        
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .sidebar-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .sidebar-item.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .sidebar-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--accent);
+        }
+        
+        .sidebar-icon {
+            font-size: 20px;
+            margin-right: 12px;
+            width: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .sidebar-badge {
+            margin-left: auto;
+            background: var(--accent);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        
+        /* Main Content Area */
+        .main-wrapper {
+            display: flex;
+            flex: 1;
+            margin-top: 64px;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+            transition: margin-left 0.3s ease;
+            min-height: calc(100vh - 64px);
+        }
+        
+        .main-content.full-width {
+            margin-left: 0;
+        }
+        
+        /* Login Page Specific */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 2rem;
+        }
+        
+        .card {
+            background: var(--surface);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .card-large {
+            max-width: 100%;
+            background: var(--surface);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 2rem;
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: var(--on-surface);
+            margin-bottom: 0.5rem;
+        }
+        
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--on-surface);
+            margin-bottom: 1.5rem;
+        }
+        
+        h3 {
+            font-size: 1.125rem;
+            font-weight: 500;
+            color: var(--on-surface);
+            margin-bottom: 1rem;
+        }
+        
+        .text-medium-emphasis {
+            color: var(--text-medium-emphasis);
+        }
+        
+        .page-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-medium-emphasis);
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-family: inherit;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(33, 96, 147, 0.1);
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            font-family: inherit;
+        }
+        
+        .btn:hover {
+            background: #1a4f7a;
+            box-shadow: 0 4px 12px rgba(33, 96, 147, 0.3);
+        }
+        
+        .btn-outlined {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        
+        .btn-outlined:hover {
+            background: rgba(33, 96, 147, 0.08);
+        }
+        
+        .btn-secondary {
+            background: var(--secondary);
+        }
+        
+        .btn-secondary:hover {
+            background: #00132e;
+        }
+        
+        .btn-icon {
+            font-size: 18px;
+        }
+        
+        .btn-block {
+            width: 100%;
+        }
+        
+        .messages {
+            margin-bottom: 1rem;
+        }
+        
+        .message {
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .message.success {
+            background: rgba(46, 147, 60, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(46, 147, 60, 0.2);
+        }
+        
+        .message.error {
+            background: rgba(219, 22, 47, 0.1);
+            color: var(--error);
+            border: 1px solid rgba(219, 22, 47, 0.2);
+        }
+        
+        .message.info {
+            background: rgba(34, 72, 112, 0.1);
+            color: var(--info);
+            border: 1px solid rgba(34, 72, 112, 0.2);
+        }
+        
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--primary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--surface);
+            padding: 1.25rem;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.08);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .stat-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
+        }
+        
+        .stat-card-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .stat-icon {
+            font-size: 24px;
+            color: var(--text-medium-emphasis);
+        }
+        
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--on-surface);
+            line-height: 1;
+        }
+        
+        .stat-label {
+            color: var(--text-medium-emphasis);
+            margin-top: 0.25rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+        
+        .user-info {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .info-value {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+                <a href="{% url 'dashboard' %}" class="navbar-brand">
+                    <span class="material-symbols-outlined">apartment</span>
+                    Modular PM
+                </a>
+            </div>
+            <div class="navbar-user">
+                <span class="text-medium-emphasis">{{ user.get_full_name|default:user.username }}</span>
+                <a href="{% url 'logout' %}" class="btn btn-outlined">
+                    <span class="material-symbols-outlined btn-icon">logout</span>
+                    Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div style="font-size: 0.875rem; font-weight: 600;">
+                {{ user.get_full_name|default:user.username }}
+            </div>
+            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.6);">
+                {% if user.is_superuser %}Administrator{% else %}User{% endif %}
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <!-- Core Section -->
+            <div class="sidebar-section-title">CORE</div>
+            <a href="{% url 'dashboard' %}" class="sidebar-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <span class="material-symbols-outlined sidebar-icon">dashboard</span>
+                Dashboard
+            </a>
+            
+            {% if user.is_superuser %}
+            <a href="/admin/" class="sidebar-item">
+                <span class="material-symbols-outlined sidebar-icon">settings</span>
+                Admin Panel
+            </a>
+            {% endif %}
+            
+            <!-- Property Management Section -->
+            <div class="sidebar-section-title">PROPERTY MANAGEMENT</div>
+            <a href="#" class="sidebar-item">
+                <span class="material-symbols-outlined sidebar-icon">apartment</span>
+                Properties
+                <span class="sidebar-badge">Coming</span>
+            </a>
+            <a href="#" class="sidebar-item">
+                <span class="material-symbols-outlined sidebar-icon">people</span>
+                Tenants
+                <span class="sidebar-badge">Coming</span>
+            </a>
+            <a href="#" class="sidebar-item">
+                <span class="material-symbols-outlined sidebar-icon">assignment</span>
+                Leases
+                <span class="sidebar-badge">Coming</span>
+            </a>
+            
+            <!-- Credentialing Section -->
+            <div class="sidebar-section-title">CREDENTIALING</div>
+            <a href="#" class="sidebar-item">
+                <span class="material-symbols-outlined sidebar-icon">badge</span>
+                Providers
+                <span class="sidebar-badge">Coming</span>
+            </a>
+            <a href="#" class="sidebar-item">
+                <span class="material-symbols-outlined sidebar-icon">verified_user</span>
+                Licenses
+                <span class="sidebar-badge">Coming</span>
+            </a>
+            <a href="#" class="sidebar-item">
+                <span class="material-symbols-outlined sidebar-icon">description</span>
+                Documents
+                <span class="sidebar-badge">Coming</span>
+            </a>
+            
+            <!-- Reports Section -->
+            <div class="sidebar-section-title">REPORTS & ANALYTICS</div>
+            <a href="#" class="sidebar-item">
+                <span class="material-symbols-outlined sidebar-icon">analytics</span>
+                Analytics
+                <span class="sidebar-badge">Coming</span>
+            </a>
+            <a href="#" class="sidebar-item">
+                <span class="material-symbols-outlined sidebar-icon">summarize</span>
+                Reports
+                <span class="sidebar-badge">Coming</span>
+            </a>
+        </nav>
+    </aside>
+    
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper">
+        <main class="main-content" id="mainContent">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            sidebar.classList.toggle('open');
+            
+            // For desktop, toggle the full-width class
+            if (window.innerWidth > 768) {
+                sidebar.classList.toggle('sidebar-closed');
+                mainContent.classList.toggle('full-width');
+            }
+        }
+        
+        // Set active sidebar item based on current URL
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            
+            sidebarItems.forEach(item => {
+                if (item.getAttribute('href') === currentPath) {
+                    item.classList.add('active');
+                }
+            });
+        });
+    </script>
+    
+    {% else %}
+    <!-- Login Page Layout -->
+    <div class="login-container">
+        {% block login_content %}{% endblock %}
+    </div>
+    {% endif %}
+</body>
+</html>

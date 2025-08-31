@@ -1,0 +1,176 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Dashboard - {{ full_name }}{% endblock %}
+
+{% block content %}
+<div>
+    <!-- Page Header -->
+    <div style="margin-bottom: 2rem;">
+        <h1>Dashboard</h1>
+        <p class="page-subtitle">Welcome back, {{ full_name }}. Here's your property management overview.</p>
+    </div>
+    
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="message {{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        {% if is_admin %}
+        <div class="stat-card">
+            <div class="stat-card-content">
+                <div>
+                    <div class="stat-value">{{ total_users }}</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <span class="material-symbols-outlined stat-icon">people</span>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="stat-card">
+            <div class="stat-card-content">
+                <div>
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Properties</div>
+                </div>
+                <span class="material-symbols-outlined stat-icon">apartment</span>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card-content">
+                <div>
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Active Leases</div>
+                </div>
+                <span class="material-symbols-outlined stat-icon">assignment</span>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card-content">
+                <div>
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Credentials</div>
+                </div>
+                <span class="material-symbols-outlined stat-icon">badge</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Access Cards -->
+    <div style="margin-top: 2rem;">
+        <h3>Quick Access</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            
+            <!-- User Profile Card -->
+            <div class="card-large" style="padding: 1.5rem;">
+                <h3 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                    <span class="material-symbols-outlined" style="color: var(--primary);">account_circle</span>
+                    User Profile
+                </h3>
+                <div class="user-info" style="background: transparent; padding: 0;">
+                    <div class="info-row">
+                        <span class="info-label">Name:</span>
+                        <span class="info-value">{{ full_name }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Email:</span>
+                        <span class="info-value">{{ user.email }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Role:</span>
+                        <span class="info-value">
+                            {% if is_admin %}
+                                <span style="color: var(--primary); font-weight: 500;">Administrator</span>
+                            {% else %}
+                                <span>User</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Last Login:</span>
+                        <span class="info-value">{{ last_login|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Activity Card -->
+            <div class="card-large" style="padding: 1.5rem;">
+                <h3 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                    <span class="material-symbols-outlined" style="color: var(--accent);">history</span>
+                    Recent Activity
+                </h3>
+                <p class="text-medium-emphasis" style="font-size: 0.875rem;">
+                    No recent activity to display. Activities will appear here as you use the system.
+                </p>
+            </div>
+            
+            {% if is_admin %}
+            <!-- System Status Card -->
+            <div class="card-large" style="padding: 1.5rem;">
+                <h3 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                    <span class="material-symbols-outlined" style="color: var(--success);">monitor_heart</span>
+                    System Status
+                </h3>
+                <div style="font-size: 0.875rem;">
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                        <span>Database:</span>
+                        <span style="color: var(--success); font-weight: 500;">Connected</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                        <span>Storage (S3):</span>
+                        <span style="color: var(--success); font-weight: 500;">Active</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                        <span>Total Users:</span>
+                        <span style="font-weight: 500;">{{ total_users }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Coming Soon Section -->
+    <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(34, 72, 112, 0.05); border-radius: 8px; border: 1px solid rgba(34, 72, 112, 0.1);">
+        <h3 style="color: var(--info); margin-bottom: 0.5rem;">Features Coming Soon</h3>
+        <p class="text-medium-emphasis" style="font-size: 0.875rem; margin-bottom: 1rem;">
+            The following modules are currently in development and will be available soon:
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--accent);">check_circle</span>
+                Property Management
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--accent);">check_circle</span>
+                Tenant Portal
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--accent);">check_circle</span>
+                Credentialing System
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--accent);">check_circle</span>
+                Document Management
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--accent);">check_circle</span>
+                Financial Reports
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--accent);">check_circle</span>
+                Maintenance Tracking
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

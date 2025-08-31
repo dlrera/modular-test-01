@@ -1,0 +1,57 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Login - Modular PM{% endblock %}
+
+{% block login_content %}
+<div class="card">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <span class="material-symbols-outlined" style="font-size: 48px; color: var(--primary);">apartment</span>
+        <h2 style="margin-top: 0.5rem;">Modular PM</h2>
+        <p class="text-medium-emphasis" style="font-size: 0.875rem;">Property Management System</p>
+    </div>
+    
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="message {{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required autofocus>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        
+        <button type="submit" class="btn btn-block">
+            <span class="material-symbols-outlined btn-icon">login</span>
+            Sign In
+        </button>
+    </form>
+    
+    <div style="margin-top: 2rem; padding: 1rem; background: rgba(34, 72, 112, 0.05); border-radius: 4px;">
+        <p style="color: var(--info); font-size: 0.8rem; font-weight: 500; margin-bottom: 0.5rem;">
+            Demo Accounts
+        </p>
+        <div style="font-size: 0.8rem; color: var(--text-medium-emphasis);">
+            <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
+                <span>Administrator:</span>
+                <code style="background: rgba(0,0,0,0.05); padding: 0.125rem 0.25rem; border-radius: 2px;">admin / Admin123!@#</code>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
+                <span>Regular User:</span>
+                <code style="background: rgba(0,0,0,0.05); padding: 0.125rem 0.25rem; border-radius: 2px;">johndoe / User123!@#</code>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

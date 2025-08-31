@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     
     # Local apps
     'core',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -111,6 +112,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom User Model
 AUTH_USER_MODEL = 'auth.User'
+
+# Login URLs
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/accounts/dashboard/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 # S3 Storage Configuration
 AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
