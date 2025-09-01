@@ -345,7 +345,46 @@ EMAIL_HOST_PASSWORD=
 SENTRY_DSN=
 ```
 
+## API Integration Testing Protocol
+
+### IMPORTANT: Test All API Endpoints Before Frontend Integration
+When implementing a new module, **ALWAYS** test the API endpoints with curl first:
+
+```bash
+# Test list endpoint
+curl -X GET http://localhost:8000/api/v1/<module>/ -s | python -m json.tool
+
+# Test create endpoint  
+curl -X POST http://localhost:8000/api/v1/<module>/ \
+  -H "Content-Type: application/json" \
+  -d '{"field": "value"}' -s | python -m json.tool
+
+# If you get errors, check:
+# 1. URLs are registered in config/urls.py
+# 2. No import errors in models/views
+# 3. Authentication is disabled for initial testing
+# 4. Request.user references are handled for AnonymousUser
+```
+
+### Frontend-Backend Integration Checklist
+1. ✅ Backend API returns data via curl
+2. ✅ Frontend store handles paginated responses (`response.data.results`)
+3. ✅ CORS is configured for localhost:5173
+4. ✅ No `request.user` errors when auth is disabled
+5. ✅ All imports exist (no ModuleNotFoundError)
+
+See `docs/15-api-integration-guide.md` for detailed troubleshooting.
+
 ## Common Issues & Solutions
+
+### Issue: TypeError: Cannot cast AnonymousUser to int
+**Solution**: Add AnonymousUser check in viewsets and serializers during development
+
+### Issue: .filter is not a function (Frontend)
+**Solution**: API returns paginated object, not array. Use `response.data.results`
+
+### Issue: ModuleNotFoundError in Django
+**Solution**: Check all imports exist, create mocks for missing modules during development
 
 ### Issue: Tenant isolation breach
 **Solution**: Check that view inherits from `TenantAwareViewSet` and model from `TenantAwareModel`
@@ -363,3 +402,4 @@ SENTRY_DSN=
 For architectural decisions, see `docs/ADR/`
 For specific module details, see module README files
 For deployment, see `docs/DEPLOYMENT.md`
+- Always check to make sure the frontend is properly configured to the backend for functionality after implementing features in a module

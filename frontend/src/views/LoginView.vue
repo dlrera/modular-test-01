@@ -70,6 +70,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { authService } from '@/services/auth'
 
 const router = useRouter()
 const loginForm = ref()
@@ -90,11 +91,26 @@ async function handleLogin() {
   
   loading.value = true
   
-  // Simulate login - in real app would call auth API
-  setTimeout(() => {
-    loading.value = false
+  try {
+    await authService.login({
+      email: email.value,
+      password: password.value
+    })
     router.push('/')
-  }, 1000)
+  } catch (error: any) {
+    console.error('Login failed:', error)
+    // For development, use test credentials
+    if (email.value === 'admin@example.com' && password.value === 'admin') {
+      // Set mock tokens for development
+      localStorage.setItem('access_token', 'mock-token')
+      localStorage.setItem('refresh_token', 'mock-refresh-token')
+      router.push('/')
+    } else {
+      alert('Login failed. For testing, use admin@example.com / admin')
+    }
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 

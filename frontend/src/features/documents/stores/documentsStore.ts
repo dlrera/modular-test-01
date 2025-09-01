@@ -82,15 +82,66 @@ export const useDocumentsStore = defineStore('documents', () => {
   })
 
   // Actions
+  async function fetchAllDocuments() {
+    loading.value = true
+    try {
+      console.log('Fetching ALL documents from API...')
+      const response = await documentsApi.listDocuments({
+        // Don't filter by folder to get all documents
+        archived: showArchived.value,
+        sort: sortBy.value
+      })
+      console.log('All documents API response:', response)
+      
+      // Handle paginated response
+      if (response.data.results) {
+        documents.value = response.data.results
+        console.log('Set all documents (paginated):', response.data.results)
+      } else if (Array.isArray(response.data)) {
+        documents.value = response.data
+        console.log('Set all documents (array):', response.data)
+      } else {
+        console.error('Unexpected documents response format:', response.data)
+        documents.value = []
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch all documents:', error)
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        documents.value = []
+      }
+    } finally {
+      loading.value = false
+    }
+  }
+  
   async function fetchDocuments() {
     loading.value = true
     try {
+      console.log('Fetching documents from API...')
       const response = await documentsApi.listDocuments({
         folder: currentFolder.value,
         archived: showArchived.value,
         sort: sortBy.value
       })
-      documents.value = response.data
+      console.log('Documents API response:', response)
+      
+      // Handle paginated response
+      if (response.data.results) {
+        documents.value = response.data.results
+        console.log('Set documents (paginated):', response.data.results)
+      } else if (Array.isArray(response.data)) {
+        documents.value = response.data
+        console.log('Set documents (array):', response.data)
+      } else {
+        console.error('Unexpected documents response format:', response.data)
+        documents.value = []
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch documents:', error)
+      // For development, use empty array if API fails
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        documents.value = []
+      }
     } finally {
       loading.value = false
     }
@@ -99,43 +150,83 @@ export const useDocumentsStore = defineStore('documents', () => {
   async function fetchFolders() {
     loading.value = true
     try {
+      console.log('Fetching folders from API...')
       const response = await documentsApi.listFolders()
-      folders.value = response.data
+      console.log('API response:', response)
+      
+      // Handle paginated response
+      if (response.data.results) {
+        folders.value = response.data.results
+        console.log('Set folders (paginated):', response.data.results)
+      } else if (Array.isArray(response.data)) {
+        folders.value = response.data
+        console.log('Set folders (array):', response.data)
+      } else {
+        console.error('Unexpected response format:', response.data)
+        folders.value = []
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch folders:', error)
+      // For development, use empty array if API fails
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        folders.value = []
+      }
     } finally {
       loading.value = false
     }
   }
 
   async function uploadDocument(formData: UploadFormData) {
-    const data = new FormData()
-    if (formData.file) {
-      data.append('file', formData.file)
-    }
-    if (formData.folder) {
-      data.append('folder', formData.folder)
-    }
-    if (formData.nickname) {
-      data.append('nickname', formData.nickname)
-    }
-    if (formData.description) {
-      data.append('description', formData.description)
-    }
-    formData.shareWith.forEach(userId => {
-      data.append('share_with', userId)
-    })
+    try {
+      console.log('Uploading document:', formData)
+      const data = new FormData()
+      if (formData.file) {
+        data.append('file', formData.file)
+      }
+      if (formData.folder) {
+        data.append('folder', formData.folder)
+      }
+      if (formData.nickname) {
+        data.append('nickname', formData.nickname)
+      }
+      if (formData.description) {
+        data.append('description', formData.description)
+      }
+      formData.shareWith.forEach(userId => {
+        data.append('share_with', userId)
+      })
 
-    const response = await documentsApi.uploadDocument(data)
-    documents.value.push(response.data)
-    return response.data
+      const response = await documentsApi.uploadDocument(data)
+      console.log('Document uploaded:', response.data)
+      documents.value.push(response.data)
+      return response.data
+    } catch (error: any) {
+      console.error('Failed to upload document:', error)
+      if (error.response?.data) {
+        console.error('Error details:', error.response.data)
+      }
+      throw error
+    }
   }
 
   async function createFolder(name: string, parentId: string | null = null) {
-    const response = await documentsApi.createFolder({
-      name,
-      parent: parentId
-    })
-    folders.value.push(response.data)
-    return response.data
+    try {
+      console.log('Creating folder:', { name, parentId })
+      const response = await documentsApi.createFolder({
+        name,
+        parent: parentId
+      })
+      console.log('Folder created:', response.data)
+      folders.value.push(response.data)
+      return response.data
+    } catch (error: any) {
+      console.error('Failed to create folder:', error)
+      // For development, show what went wrong
+      if (error.response?.data) {
+        console.error('Error details:', error.response.data)
+      }
+      throw error
+    }
   }
 
   async function toggleFolderExpanded(folderId: string) {
@@ -193,8 +284,24 @@ export const useDocumentsStore = defineStore('documents', () => {
   }
 
   async function fetchNotifications() {
-    const response = await documentsApi.listNotifications({ is_read: false })
-    notifications.value = response.data
+    try {
+      const response = await documentsApi.listNotifications({ is_read: false })
+      // Handle paginated response
+      if (response.data.results) {
+        notifications.value = response.data.results
+      } else if (Array.isArray(response.data)) {
+        notifications.value = response.data
+      } else {
+        console.error('Unexpected notifications response format:', response.data)
+        notifications.value = []
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch notifications:', error)
+      // For development, use empty array if API fails
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        notifications.value = []
+      }
+    }
   }
 
   async function markNotificationRead(notificationId: string) {
@@ -243,6 +350,7 @@ export const useDocumentsStore = defineStore('documents', () => {
     
     // Actions
     fetchDocuments,
+    fetchAllDocuments,
     fetchFolders,
     uploadDocument,
     createFolder,

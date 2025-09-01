@@ -39,6 +39,42 @@ def create_something_public(user, tenant, dto):
     return ExampleService(user, tenant).create_something(dto)
 ```
 
+### ViewSet pattern for development
+```python
+# views.py - Start with minimal auth for testing
+from rest_framework import viewsets
+from core.tenancy.views import TenantAwareViewSet
+
+class MyModelViewSet(TenantAwareViewSet):
+    queryset = MyModel.objects.all()
+    serializer_class = MyModelSerializer
+    
+    # Start with no auth for testing
+    permission_classes = []
+    authentication_classes = []
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Handle anonymous users during development
+        from django.contrib.auth.models import AnonymousUser
+        if isinstance(self.request.user, AnonymousUser):
+            return queryset
+        
+        # Production: filter by user
+        return queryset.filter(created_by=self.request.user)
+```
+
+### API Testing before frontend
+```bash
+# Always test your endpoints first!
+curl -X GET http://localhost:8000/api/v1/module/ -s | python -m json.tool
+curl -X POST http://localhost:8000/api/v1/module/ \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Test"}' -s | python -m json.tool
+```
+
 ### Test pattern
 - Unit tests focus on `services/`.
 - API tests verify request/response and tenant scoping.
+- **Manual curl tests before frontend integration**.

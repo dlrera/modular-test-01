@@ -84,45 +84,46 @@
       </v-col>
     </v-row>
 
-    <!-- Main Content Area -->
+    <!-- Main Content Area - Unified Tree View -->
     <v-row>
-      <!-- Folder Tree -->
-      <v-col cols="12" md="3">
+      <v-col cols="12">
         <v-card>
-          <v-card-title class="text-h6">
-            Folders
+          <v-card-title class="d-flex align-center">
+            <v-icon class="mr-2">mdi-folder-home</v-icon>
+            <span>{{ currentPath }}</span>
             <v-spacer />
             <v-btn
-              icon
+              color="primary"
               size="small"
+              prepend-icon="mdi-folder-plus"
               @click="showCreateFolderDialog = true"
+              class="mr-2"
             >
-              <v-icon>mdi-folder-plus</v-icon>
+              New Folder
+            </v-btn>
+            <v-btn
+              color="primary"
+              size="small"
+              prepend-icon="mdi-file-plus"
+              @click="showUploadDialog = true"
+            >
+              Upload File
             </v-btn>
           </v-card-title>
+          <v-divider />
           <v-card-text class="pa-0">
-            <FolderTree
-              :folders="store.folderTree"
-              :current-folder="store.currentFolder"
-              @select="handleFolderSelect"
-              @toggle="store.toggleFolderExpanded"
-            />
-          </v-card-text>
-        </v-card>
-      </v-col>
-
-      <!-- Document List -->
-      <v-col cols="12" md="9">
-        <v-card>
-          <v-card-text>
-            <DocumentList
-              :documents="store.sortedDocuments"
-              :loading="store.loading"
+            <DocumentTree
+              :folders="store.folders"
+              :documents="store.documents"
+              :selected-id="selectedItemId"
+              @select="handleItemSelect"
+              @toggle="handleToggleFolderExpanded"
               @edit="handleEditDocument"
               @download="handleDownloadDocument"
               @share="handleShareDocument"
               @archive="handleArchiveDocument"
               @delete="handleDeleteDocument"
+              @create-folder="handleCreateSubfolder"
             />
           </v-card-text>
         </v-card>
@@ -162,11 +163,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useDocumentsStore } from '../stores/documentsStore'
 import { documentsApi } from '../services/documentsApi'
-import DocumentList from './DocumentList.vue'
-import FolderTree from './FolderTree.vue'
+import DocumentTree from './DocumentTree.vue'
 import UploadModal from './UploadModal.vue'
 import CreateFolderDialog from './CreateFolderDialog.vue'
 import ShareDialog from './ShareDialog.vue'
@@ -190,17 +190,35 @@ const showCreateFolderDialog = ref(false)
 const showShareDialog = ref(false)
 const showNotifications = ref(false)
 const selectedDocument = ref<Document | null>(null)
+const selectedItemId = ref<string | null>(null)
 const searchQuery = ref('')
 const includeDescription = ref(false)
 const sortBy = ref<'name' | 'date' | 'size'>('name')
 
+// Computed
+const currentPath = computed(() => {
+  if (!store.currentFolder) return 'All Documents'
+  const folder = store.folders.find(f => f.id === store.currentFolder)
+  return folder?.full_path || 'All Documents'
+})
+
 // Initialize
 onMounted(async () => {
-  await Promise.all([
-    store.fetchFolders(),
-    store.fetchDocuments(),
-    store.fetchNotifications()
-  ])
+  console.log('DocumentRepository mounted, fetching data...')
+  try {
+    await Promise.all([
+      store.fetchFolders(),
+      store.fetchAllDocuments(),  // Fetch ALL documents for the tree view
+      store.fetchNotifications()
+    ])
+    console.log('Data fetched:', {
+      folders: store.folders,
+      documents: store.documents,
+      notifications: store.notifications
+    })
+  } catch (error) {
+    console.error('Error fetching initial data:', error)
+  }
 })
 
 // Watch for sort changes
@@ -223,9 +241,23 @@ const handleSearch = debounce(async () => {
   }
 }, 300)
 
-function handleFolderSelect(folderId: string | null) {
-  store.currentFolder = folderId
-  store.fetchDocuments()
+function handleItemSelect(item: any) {
+  selectedItemId.value = item.id
+  if (item.type === 'folder') {
+    store.currentFolder = item.id
+    store.fetchDocuments()
+  }
+}
+
+async function handleToggleFolderExpanded(folderId: string) {
+  await store.toggleFolderExpanded(folderId)
+  // Refresh folders to get updated expansion state
+  await store.fetchFolders()
+}
+
+function handleCreateSubfolder(parentId: string | null) {
+  store.currentFolder = parentId
+  showCreateFolderDialog.value = true
 }
 
 async function handleUpload(formData: UploadFormData) {

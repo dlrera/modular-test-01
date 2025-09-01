@@ -104,7 +104,7 @@ class Document(TenantBaseModel):
     # S3 storage references
     s3_key = models.CharField(max_length=500, unique=True)
     s3_bucket = models.CharField(max_length=255)
-    s3_version_id = models.CharField(max_length=255, blank=True)
+    s3_version_id = models.CharField(max_length=255, blank=True, null=True)
     
     # Additional metadata
     is_archived = models.BooleanField(default=False)
@@ -143,9 +143,11 @@ class Document(TenantBaseModel):
     
     def get_s3_url(self, expiration: int = 3600) -> str:
         """Generate pre-signed S3 URL for download"""
-        # This will be implemented with boto3 in the storage module
-        from core.storage.s3 import generate_presigned_url
-        return generate_presigned_url(self.s3_bucket, self.s3_key, expiration)
+        # TODO: Implement proper S3 presigned URL generation
+        # For now, return a mock URL for testing
+        if self.s3_key:
+            return f"http://localhost:9000/{self.s3_bucket}/{self.s3_key}"
+        return ""
     
     def determine_file_type(self) -> str:
         """Determine file type based on extension and mime type"""
