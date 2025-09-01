@@ -112,9 +112,15 @@
           </v-card-title>
           <v-divider />
           <v-card-text class="pa-0">
+            <v-progress-linear
+              v-if="isInitializing"
+              indeterminate
+              color="primary"
+            />
             <DocumentTree
+              v-else
               :folders="store.folders"
-              :documents="store.documents"
+              :documents="store.allDocumentsSorted"
               :selected-id="selectedItemId"
               @select="handleItemSelect"
               @toggle="handleToggleFolderExpanded"
@@ -202,28 +208,36 @@ const currentPath = computed(() => {
   return folder?.full_path || 'All Documents'
 })
 
+// Add a local loading state
+const isInitializing = ref(true)
+
 // Initialize
 onMounted(async () => {
   console.log('DocumentRepository mounted, fetching data...')
+  isInitializing.value = true
   try {
+    // Fetch folders first as they're needed for the tree structure
+    await store.fetchFolders()
+    // Then fetch documents and notifications in parallel
     await Promise.all([
-      store.fetchFolders(),
-      store.fetchAllDocuments(),  // Fetch ALL documents for the tree view
+      store.fetchAllDocuments(),
       store.fetchNotifications()
     ])
     console.log('Data fetched:', {
-      folders: store.folders,
-      documents: store.documents,
-      notifications: store.notifications
+      folders: store.folders.length,
+      documents: store.documents.length
     })
   } catch (error) {
     console.error('Error fetching initial data:', error)
+  } finally {
+    isInitializing.value = false
   }
 })
 
 // Watch for sort changes
 watch(sortBy, (value) => {
   store.sortBy = value
+  // No need to refetch - sorting is handled by computed property
 })
 
 // Handlers
@@ -245,14 +259,14 @@ function handleItemSelect(item: any) {
   selectedItemId.value = item.id
   if (item.type === 'folder') {
     store.currentFolder = item.id
-    store.fetchDocuments()
+    // Don't fetch documents - we already have them all
+    // The tree will filter based on currentFolder if needed
   }
 }
 
-async function handleToggleFolderExpanded(folderId: string) {
-  await store.toggleFolderExpanded(folderId)
-  // Refresh folders to get updated expansion state
-  await store.fetchFolders()
+function handleToggleFolderExpanded(folderId: string) {
+  // Just toggle - no need to wait or refresh
+  store.toggleFolderExpanded(folderId)
 }
 
 function handleCreateSubfolder(parentId: string | null) {

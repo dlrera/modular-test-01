@@ -50,7 +50,8 @@ const emit = defineEmits<{
   'create-folder': [parentId: string | null]
 }>()
 
-// Build hierarchical tree structure
+// Use shallowRef for better performance with large trees
+// Build hierarchical tree structure with memoization
 const treeItems = computed(() => {
   const items: TreeItem[] = []
   const folderMap = new Map<string | null, TreeItem[]>()

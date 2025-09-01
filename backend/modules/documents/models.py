@@ -32,6 +32,9 @@ class Folder(TenantBaseModel):
         null=True,
         blank=True
     )
+    # Temporary field for testing without user authentication
+    # TODO: Remove when using FolderUserState with proper authentication
+    is_expanded = models.BooleanField(default=False)
     
     class Meta:
         db_table = 'documents_folders'

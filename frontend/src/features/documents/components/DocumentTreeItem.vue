@@ -147,7 +147,7 @@
     <template v-if="item.type === 'folder' && item.isExpanded && item.children">
       <DocumentTreeItem
         v-for="child in item.children"
-        :key="child.id"
+        :key="`${child.type}-${child.id}`"
         :item="child"
         :level="level + 1"
         :selected-id="selectedId"

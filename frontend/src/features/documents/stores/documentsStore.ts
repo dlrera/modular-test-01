@@ -55,6 +55,32 @@ export const useDocumentsStore = defineStore('documents', () => {
     
     return docs
   })
+  
+  // Computed for ALL documents sorted (for tree view) - with shallow copy for performance
+  const allDocumentsSorted = computed(() => {
+    // Filter first (less items to sort)
+    const filteredDocs = documents.value.filter(d => d.isArchived === showArchived.value)
+    
+    // Only sort if we have documents
+    if (filteredDocs.length === 0) return []
+    
+    // Create a shallow copy for sorting
+    const docs = [...filteredDocs]
+    
+    // Sort in place (more efficient)
+    switch (sortBy.value) {
+      case 'date':
+        docs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        break
+      case 'size':
+        docs.sort((a, b) => b.fileSize - a.fileSize)
+        break
+      default:
+        docs.sort((a, b) => a.displayName.localeCompare(b.displayName))
+    }
+    
+    return docs
+  })
 
   const currentFolderPath = computed(() => {
     if (!currentFolder.value) return '/'
@@ -88,8 +114,9 @@ export const useDocumentsStore = defineStore('documents', () => {
       console.log('Fetching ALL documents from API...')
       const response = await documentsApi.listDocuments({
         // Don't filter by folder to get all documents
-        archived: showArchived.value,
-        sort: sortBy.value
+        // Don't pass folder parameter to get all documents
+        archived: showArchived.value
+        // Note: sorting is handled in the computed property, not in the API call
       })
       console.log('All documents API response:', response)
       
@@ -229,11 +256,15 @@ export const useDocumentsStore = defineStore('documents', () => {
     }
   }
 
-  async function toggleFolderExpanded(folderId: string) {
+  function toggleFolderExpanded(folderId: string) {
+    // Make this instant - no API call needed for UI responsiveness
     const folder = folders.value.find(f => f.id === folderId)
     if (folder) {
-      const response = await documentsApi.toggleFolderExpand(folderId)
-      folder.isExpanded = response.data.is_expanded
+      folder.isExpanded = !folder.isExpanded
+      // Save state to backend in background (fire and forget)
+      documentsApi.toggleFolderExpand(folderId).catch(error => {
+        console.warn('Failed to save folder state:', error)
+      })
     }
   }
 
@@ -344,6 +375,7 @@ export const useDocumentsStore = defineStore('documents', () => {
     
     // Computed
     sortedDocuments,
+    allDocumentsSorted,
     currentFolderPath,
     unreadNotificationCount,
     folderTree,

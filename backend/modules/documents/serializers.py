@@ -15,7 +15,8 @@ class FolderSerializer(serializers.ModelSerializer):
     children = serializers.SerializerMethodField()
     document_count = serializers.SerializerMethodField()
     full_path = serializers.SerializerMethodField()
-    is_expanded = serializers.SerializerMethodField()
+    # Use the model field directly instead of a method
+    # is_expanded = serializers.SerializerMethodField()
     
     class Meta:
         model = Folder
@@ -37,17 +38,6 @@ class FolderSerializer(serializers.ModelSerializer):
     def get_full_path(self, obj) -> str:
         """Get full path from root"""
         return obj.get_full_path()
-    
-    def get_is_expanded(self, obj) -> bool:
-        """Get user's expand/collapse state for this folder"""
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            state = FolderUserState.objects.filter(
-                user=request.user,
-                folder=obj
-            ).first()
-            return state.is_expanded if state else False
-        return False
 
 
 class DocumentSerializer(serializers.ModelSerializer):
