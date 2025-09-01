@@ -1,0 +1,689 @@
+openapi: 3.0.3
+info:
+  title: Document Management API
+  version: 1.0.0
+  description: API for managing documents, folders, and file sharing
+
+servers:
+  - url: /api/v1
+    description: API v1
+
+paths:
+  /folders/:
+    get:
+      summary: List folders
+      operationId: listFolders
+      tags:
+        - Folders
+      parameters:
+        - name: parent
+          in: query
+          description: Filter by parent folder ID (use 'root' for root folders)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of folders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Folder'
+    
+    post:
+      summary: Create folder
+      operationId: createFolder
+      tags:
+        - Folders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                parent:
+                  type: string
+                  nullable: true
+      responses:
+        '201':
+          description: Folder created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+
+  /folders/{id}/toggle_expand/:
+    post:
+      summary: Toggle folder expanded state
+      operationId: toggleFolderExpand
+      tags:
+        - Folders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: State toggled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_expanded:
+                    type: boolean
+
+  /files/:
+    get:
+      summary: List documents
+      operationId: listDocuments
+      tags:
+        - Documents
+      parameters:
+        - name: folder
+          in: query
+          schema:
+            type: string
+        - name: archived
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [name, date, size]
+            default: name
+        - name: include_shared
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+
+  /files/upload/:
+    post:
+      summary: Upload document
+      operationId: uploadDocument
+      tags:
+        - Documents
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                folder:
+                  type: string
+                nickname:
+                  type: string
+                description:
+                  type: string
+                share_with:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Document uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '400':
+          description: Invalid file or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /files/{id}/:
+    get:
+      summary: Get document details
+      operationId: getDocument
+      tags:
+        - Documents
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Document details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+    
+    patch:
+      summary: Update document metadata
+      operationId: updateDocument
+      tags:
+        - Documents
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nickname:
+                  type: string
+                description:
+                  type: string
+                folder:
+                  type: string
+      responses:
+        '200':
+          description: Document updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+    
+    delete:
+      summary: Delete document
+      operationId: deleteDocument
+      tags:
+        - Documents
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Document deleted
+
+  /files/{id}/archive/:
+    post:
+      summary: Archive document
+      operationId: archiveDocument
+      tags:
+        - Documents
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Document archived
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+
+  /files/{id}/restore/:
+    post:
+      summary: Restore archived document
+      operationId: restoreDocument
+      tags:
+        - Documents
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Document restored
+
+  /files/{id}/download_url/:
+    get:
+      summary: Get pre-signed download URL
+      operationId: getDownloadUrl
+      tags:
+        - Documents
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Download URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  download_url:
+                    type: string
+
+  /files/search/:
+    post:
+      summary: Search documents
+      operationId: searchDocuments
+      tags:
+        - Documents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+              properties:
+                query:
+                  type: string
+                  minLength: 2
+                includeDescription:
+                  type: boolean
+                  default: false
+                folder:
+                  type: string
+                  nullable: true
+                fileTypes:
+                  type: array
+                  items:
+                    type: string
+                    enum: [word, excel, pdf, image, csv, text, generic]
+                archived:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+
+  /shares/:
+    get:
+      summary: List document shares
+      operationId: listShares
+      tags:
+        - Sharing
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [sent, received]
+            default: received
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, accepted, rejected, revoked]
+      responses:
+        '200':
+          description: List of shares
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentShare'
+    
+    post:
+      summary: Create document share
+      operationId: createShare
+      tags:
+        - Sharing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - document
+                - shared_with
+              properties:
+                document:
+                  type: string
+                shared_with:
+                  type: string
+                can_download:
+                  type: boolean
+                  default: true
+                can_share:
+                  type: boolean
+                  default: false
+                can_edit:
+                  type: boolean
+                  default: false
+                message:
+                  type: string
+                expires_at:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: Share created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentShare'
+
+  /shares/{id}/accept/:
+    post:
+      summary: Accept share invitation
+      operationId: acceptShare
+      tags:
+        - Sharing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Share accepted
+
+  /shares/{id}/reject/:
+    post:
+      summary: Reject share invitation
+      operationId: rejectShare
+      tags:
+        - Sharing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Share rejected
+
+  /shares/{id}/revoke/:
+    post:
+      summary: Revoke document share
+      operationId: revokeShare
+      tags:
+        - Sharing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Share revoked
+
+  /notifications/:
+    get:
+      summary: List share notifications
+      operationId: listNotifications
+      tags:
+        - Notifications
+      parameters:
+        - name: is_read
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ShareNotification'
+
+  /notifications/{id}/mark_read/:
+    post:
+      summary: Mark notification as read
+      operationId: markNotificationRead
+      tags:
+        - Notifications
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notification marked as read
+
+  /notifications/mark_all_read/:
+    post:
+      summary: Mark all notifications as read
+      operationId: markAllNotificationsRead
+      tags:
+        - Notifications
+      responses:
+        '200':
+          description: All notifications marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  marked_read:
+                    type: integer
+
+  /notifications/unread_count/:
+    get:
+      summary: Get unread notification count
+      operationId: getUnreadCount
+      tags:
+        - Notifications
+      responses:
+        '200':
+          description: Unread count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unread_count:
+                    type: integer
+
+components:
+  schemas:
+    Folder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        parent:
+          type: string
+          nullable: true
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Folder'
+        document_count:
+          type: integer
+        full_path:
+          type: string
+        is_expanded:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        folder:
+          type: string
+          nullable: true
+        original_name:
+          type: string
+        nickname:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+        file_type:
+          type: string
+          enum: [word, excel, pdf, image, csv, text, generic]
+        mime_type:
+          type: string
+        file_size:
+          type: integer
+        file_extension:
+          type: string
+        download_url:
+          type: string
+        folder_path:
+          type: string
+        uploaded_by_name:
+          type: string
+        shares:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentShare'
+        can_share:
+          type: boolean
+        is_archived:
+          type: boolean
+        archived_at:
+          type: string
+          format: date-time
+          nullable: true
+        ai_processed:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    DocumentShare:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        document:
+          type: string
+        document_name:
+          type: string
+        shared_by:
+          type: string
+        shared_by_name:
+          type: string
+        shared_with:
+          type: string
+        shared_with_name:
+          type: string
+        status:
+          type: string
+          enum: [pending, accepted, rejected, revoked]
+        can_download:
+          type: boolean
+        can_share:
+          type: boolean
+        can_edit:
+          type: boolean
+        message:
+          type: string
+        shared_at:
+          type: string
+          format: date-time
+        responded_at:
+          type: string
+          format: date-time
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ShareNotification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        document_share:
+          type: string
+        document_name:
+          type: string
+        shared_by_name:
+          type: string
+        notification_type:
+          type: string
+          enum: [share_received, share_accepted, share_rejected, share_revoked]
+        share_status:
+          type: string
+        is_read:
+          type: boolean
+        read_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        detail:
+          type: string
+        code:
+          type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []

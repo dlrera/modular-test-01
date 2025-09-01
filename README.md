@@ -1,6 +1,27 @@
-# Modular Test 01
+# Property Management System
 
-A modern full-stack application built with Django REST Framework and Vue.js, organized as a mono-repo.
+A modern multi-tenant property management application built with Django REST Framework and Vue.js, organized as a mono-repo with modular architecture.
+
+## ✨ Features
+
+### 📁 Document Management Module (Completed)
+- **File Upload & Storage**: Drag-and-drop file uploads with S3/MinIO storage
+- **Folder Organization**: Hierarchical folder structure with expand/collapse state persistence
+- **Document Sharing**: Share files with team members with granular permissions
+- **Search & Filter**: Search across file names, nicknames, and descriptions
+- **Real-time Notifications**: Accept/reject document shares with notification system
+- **File Processing**: Automatic thumbnail generation, virus scanning, and text extraction
+- **Archive System**: Archive and restore documents
+- **File Type Support**: Word, Excel, PDF, Images, CSV, Text files with automatic type detection
+
+### 🚧 Upcoming Modules
+- **PM Templates**: Property management document templates
+- **Risk Inspections**: Risk assessment and inspection management
+- **Properties**: Property portfolio management
+- **Tenants**: Tenant management and communication
+- **Maintenance**: Work order and maintenance tracking
+- **Financial**: Rent collection and financial reporting
+- **Reports**: Comprehensive reporting and analytics
 
 ## 🏗️ Project Structure
 
@@ -8,12 +29,19 @@ A modern full-stack application built with Django REST Framework and Vue.js, org
 modular-test-01/
 ├── backend/           # Django REST API
 │   ├── config/       # Django settings and configuration
-│   ├── apps/         # Django applications
-│   └── tests/        # Backend tests
+│   ├── core/         # Core functionality (auth, tenancy)
+│   ├── modules/      # Feature modules
+│   │   ├── documents/    # Document management module
+│   │   ├── pm_templates/ # PM templates module (planned)
+│   │   └── risk_inspections/ # Risk inspections (planned)
+│   └── api/          # API contracts and documentation
 ├── frontend/         # Vue.js SPA
-│   ├── src/          # Vue source code
-│   ├── public/       # Static assets
-│   └── tests/        # Frontend tests
+│   ├── src/          
+│   │   ├── features/ # Feature modules
+│   │   │   └── documents/ # Document management UI
+│   │   ├── layouts/  # Application layouts
+│   │   └── views/    # Page views
+│   └── public/       # Static assets
 ├── docs/             # Documentation
 ├── .github/          # GitHub workflows and templates
 └── docker-compose.yml # Local development environment
@@ -100,8 +128,15 @@ python -m venv venv
 # Unix/macOS: source venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
+
+# Run migrations
 python manage.py migrate
+python manage.py migrate documents  # Document module migrations
+
+# Create superuser
 python manage.py createsuperuser
+
+# Start development server
 python manage.py runserver
 ```
 
@@ -121,10 +156,11 @@ celery -A config worker -l info
 ## 🌐 Development URLs
 
 - **Frontend:** http://localhost:5173
-- **Backend API:** http://localhost:8000
-- **API Documentation:** http://localhost:8000/api/docs/
+- **Document Management:** http://localhost:5173/documents
+- **Backend API:** http://localhost:8000/api/v1/
+- **API Documentation:** http://localhost:8000/api/v1/docs/
 - **Django Admin:** http://localhost:8000/admin/
-- **MinIO Console:** http://localhost:9001
+- **MinIO Console:** http://localhost:9001 (admin/minioadmin)
 - **Mailpit UI:** http://localhost:8025
 
 ## 📝 Development Workflow
@@ -206,9 +242,22 @@ npm run build
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 📚 Module Documentation
+
+### Document Management Module
+See [backend/modules/documents/README.md](backend/modules/documents/README.md) for detailed documentation.
+
+**API Endpoints:**
+- `GET/POST /api/v1/folders/` - Folder management
+- `GET/POST /api/v1/files/` - Document operations
+- `POST /api/v1/files/upload/` - File upload
+- `POST /api/v1/files/search/` - Document search
+- `GET/POST /api/v1/shares/` - Document sharing
+- `GET /api/v1/notifications/` - Share notifications
+
 ## 👥 Team
 
-- [Your Name] - Initial work
+- Development Team - Initial work
 
 ## 🙏 Acknowledgments
 
